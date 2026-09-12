@@ -1914,17 +1914,22 @@ Example:
 ---
 
 # 📸 Project Images
+```text
+Project Image
+```
+![Project](./Images/a4.jpeg)
+
+```text
+Center Node
+```
+![Project](./Images/c1.jpeg)
+
 
 The repository contains project photographs in:
 
 ```text
 Images/
 ```
-
-```text
-Project.png
-```
-![Project](./Images/a2.jpeg)
 
 Current images include:
 ```text
