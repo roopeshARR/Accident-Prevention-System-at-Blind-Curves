@@ -96,21 +96,6 @@ The main architecture consists of:
 
 Blind curves are dangerous because the road geometry prevents drivers from seeing vehicles approaching from the opposite direction.
 
-A typical situation is:
-
-```text
-                         BLIND CURVE
-                       ╭─────────────╮
-                      /
-                     /
-                    /
-        🚗 --------/
-                  /
-                 /
-                /
-               /--------- 🚙
-```
-
 Both vehicles may enter the curve without knowing that another vehicle is approaching.
 
 This is particularly dangerous on:
