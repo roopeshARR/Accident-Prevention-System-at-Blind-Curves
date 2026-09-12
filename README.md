@@ -48,43 +48,35 @@ The project uses multiple microcontrollers, with each controller assigned a spec
 The main architecture consists of:
 
 ```text
-                UPPER SIDE
-                    │
-                 ESP32
-                    │
-                 LoRa
-                    │
-                    ▼
-              ESP8266 RECEIVER
-                    │
-                  I²C
-                    │
-                    ▼
-               ARDUINO NANO
-                    │
-          ┌─────────┼─────────┐
-          ▼         ▼         ▼
-        LEDs      Buzzer      Curve
-                             Detection
+                UPPER SIDE       LOWER SIDE
+                    │                 │
+                 ESP32              ESP32
+                    │                 │
+                  LoRa              LoRa
+                    │                 │
+                    ▼                 ▼
+                     ESP8266 RECEIVER
+                            │
+                           I²C
+                            │
+                            ▼
+                       ARDUINO NANO
+                            │
+                  ┌─────────┼─────────┐
+                  ▼         ▼         ▼
+                 LEDs      Buzzer      Curve
+                                       Detection
 
 
-                LOWER SIDE
-                    │
-                 ESP32
-                    │
-                 LoRa
-                    │
-                    └──────────► ESP8266
-
-
-                 ESP32-CAM
-                    │
-                  Wi-Fi
-                    │
-          ┌─────────┴──────────┐
-          ▼                    ▼
-     Live Browser          OpenCV
-      Monitoring          Recording
+               
+                         ESP32-CAM
+                             │
+                           Wi-Fi
+                             │
+                   ┌─────────┴──────────┐
+                   ▼                    ▼
+                Live Browser          OpenCV
+                Monitoring          Recording
                                │
                                ▼
                        Timestamped Files
