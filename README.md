@@ -2518,25 +2518,6 @@ Department of ECE
 
 ---
 
-# 📄 Project Files
-
-| File                            | Description                |
-| ------------------------------- | -------------------------- |
-| `Doc.pdf`                       | Complete project report    |
-| `Presentation.pptx`             | Project presentation       |
-| `BlockDiagram.png`              | System block diagram       |
-| `Flow_Chart_Curve.png`          | Blind curve flowchart      |
-| `Flow_Chart_esp32.png`          | ESP32 flowchart            |
-| `Codes/sender_up/`              | Upper ESP32 node           |
-| `Codes/sender_down/`            | Lower ESP32 node           |
-| `Codes/receiver8266/`           | ESP8266 central controller |
-| `Codes/ard_nan/`                | Arduino Nano controller    |
-| `Codes/CameraWebServer/`        | ESP32-CAM firmware         |
-| `Codes/blind_curve_recorder.py` | Python/OpenCV recorder     |
-| `Images/`                       | Project photographs        |
-
----
-
 # 📜 License
 
 This project is primarily intended for:
@@ -2548,72 +2529,6 @@ This project is primarily intended for:
 * Prototype development
 
 Deployment on public roads would require appropriate engineering validation, environmental testing, safety certification, regulatory approval, and extensive field testing.
-
----
-
-# ⭐ Future Vision
-
-The current project is a working prototype that combines **vehicle sensing, wireless communication, traffic-state processing, warning systems, and camera monitoring**.
-
-The future goal is to evolve it into a complete intelligent blind-curve safety system:
-
-```text
-                    CURRENT
-                       │
-                       ▼
-               Ultrasonic Sensors
-                       │
-                       ▼
-                  ESP32 Nodes
-                       │
-                       ▼
-                      LoRa
-                       │
-                       ▼
-                    ESP8266
-                       │
-                       ▼
-                  Arduino Nano
-                       │
-                       ▼
-               LED + LCD + Buzzer
-                       │
-                       ▼
-                 Driver Warning
-
-
-                    CAMERA
-                       │
-                       ▼
-                  ESP32-CAM
-                       │
-                       ▼
-                  Live Stream
-                       │
-                       ▼
-             Timestamped Recording
-                       │
-                       ▼
-                 Future AI/CV
-                       │
-                       ▼
-              Vehicle Detection
-                       │
-                       ▼
-             Vehicle Classification
-                       │
-                       ▼
-               Speed Estimation
-                       │
-                       ▼
-              Collision Prediction
-                       │
-                       ▼
-              Intelligent Warning
-                       │
-                       ▼
-                Smart Road Network
-```
 
 ---
 
