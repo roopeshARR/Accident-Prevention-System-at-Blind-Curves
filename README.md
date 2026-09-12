@@ -2,179 +2,410 @@
 
 <p align="center">
 
-# 🚗 Smart Blind-Curve Accident Prevention & Monitoring System
+# 🚗 Accident Prevention System at Blind Curves
 
-**An ESP32-based intelligent road-safety system for detecting, monitoring, recording, and warning about vehicles at blind curves**
+### A Multi-Controller Embedded System for Vehicle Detection, Speed Estimation, ETA Prediction, Wireless Warning and Visual Monitoring
 
 </p>
 
 <p align="center">
 
-![ESP32](https://img.shields.io/badge/Controller-ESP32-blue)
-![ESP32-CAM](https://img.shields.io/badge/Camera-ESP32--CAM-orange)
-![Embedded Systems](https://img.shields.io/badge/Domain-Embedded%20Systems-green)
-![IoT](https://img.shields.io/badge/Technology-IoT-blueviolet)
-![Road Safety](https://img.shields.io/badge/Application-Road%20Safety-red)
-![Status](https://img.shields.io/badge/Status-Working%20Prototype-yellow)
+![ESP32](https://img.shields.io/badge/ESP32-2%20Nodes-blue)
+![ESP8266](https://img.shields.io/badge/ESP8266-NodeMCU-orange)
+![Arduino](https://img.shields.io/badge/Arduino-Nano-green)
+![ESP32-CAM](https://img.shields.io/badge/ESP32--CAM-AI--Thinker-red)
+![LoRa](https://img.shields.io/badge/LoRa-SX1278%20433MHz-purple)
+![OpenCV](https://img.shields.io/badge/OpenCV-Video%20Recording-blue)
+![Embedded Systems](https://img.shields.io/badge/Domain-Embedded%20Systems-yellow)
+![IoT](https://img.shields.io/badge/Technology-IoT-lightgrey)
 
 </p>
 
 ---
 
-## 📌 Project Overview
+# 📌 Overview
 
-The **Accident Prevention System at Blind Curves** is an embedded and IoT-based road-safety project designed to reduce the risk of vehicle collisions at **blind curves, sharp turns, narrow roads, hairpin bends, and other locations where drivers cannot see approaching traffic from the opposite direction**.
+The **Accident Prevention System at Blind Curves** is a multi-controller embedded road-safety system designed to reduce the risk of collisions at **blind curves, sharp turns, narrow roads, hairpin bends, and hilly roads** where drivers cannot directly see vehicles approaching from the opposite direction.
 
-The system combines **vehicle detection, warning mechanisms, ESP32-based control, and camera-based visual monitoring**.
+The system combines:
 
-The project has been developed progressively from a basic blind-curve warning concept into a more capable monitoring system.
+* **Vehicle detection**
+* **Vehicle classification**
+* **Speed estimation**
+* **Estimated Time of Arrival (ETA) calculation**
+* **Long-range LoRa communication**
+* **Dual-direction traffic monitoring**
+* **Priority-based decision making**
+* **LCD-based driver information**
+* **LED warning indicators**
+* **Audible warning**
+* **ESP32-CAM visual monitoring**
+* **Wi-Fi live video streaming**
+* **Timestamped video recording**
 
-The current prototype includes an **ESP32-CAM** that provides a live camera feed over Wi-Fi and can be used to **record and store footage with timestamps**.
+The project uses multiple microcontrollers, with each controller assigned a specific responsibility.
 
-The long-term objective is to develop a system capable of not only detecting the presence of vehicles but also understanding the traffic situation around a blind curve and providing timely warnings to reduce collision risk.
+The main architecture consists of:
+
+```text
+                UPPER SIDE
+                    │
+                 ESP32
+                    │
+                 LoRa
+                    │
+                    ▼
+              ESP8266 RECEIVER
+                    │
+                  I²C
+                    │
+                    ▼
+               ARDUINO NANO
+                    │
+          ┌─────────┼─────────┐
+          ▼         ▼         ▼
+        LEDs      Buzzer      Curve
+                             Detection
+
+
+                LOWER SIDE
+                    │
+                 ESP32
+                    │
+                 LoRa
+                    │
+                    └──────────► ESP8266
+
+
+                 ESP32-CAM
+                    │
+                  Wi-Fi
+                    │
+          ┌─────────┴──────────┐
+          ▼                    ▼
+     Live Browser          OpenCV
+      Monitoring          Recording
+                               │
+                               ▼
+                       Timestamped Files
+```
 
 ---
 
 # 🎯 Problem Statement
 
-Blind curves create a serious safety problem because drivers approaching from opposite directions may not be able to see each other.
+Blind curves are dangerous because the road geometry prevents drivers from seeing vehicles approaching from the opposite direction.
 
-Consider a narrow road:
+A typical situation is:
 
 ```text
                          BLIND CURVE
-                       ______________
+                       ╭─────────────╮
                       /
                      /
-        🚗 ---------/
-                   /
+                    /
+        🚗 --------/
                   /
                  /
-                /--------- 🚙
+                /
+               /--------- 🚙
 ```
 
-The drivers may have **no direct line of sight** to each other.
+Both vehicles may enter the curve without knowing that another vehicle is approaching.
 
-If both vehicles enter the curve simultaneously, a collision can occur.
+This is particularly dangerous on:
 
-Traditional methods such as:
+* Mountain roads
+* Hilly roads
+* Narrow roads
+* Hairpin bends
+* Sharp turns
+* Roads with restricted visibility
 
-* Horns
-* Mirrors
-* Road signs
-* Driver awareness
+Traditional safety measures such as:
 
-are not always sufficient.
+* Warning signs
+* Convex mirrors
+* Speed breakers
+* Manual observation
+* Vehicle horns
 
-Therefore, the project aims to create an **active road-safety system** that can:
+do not always provide real-time information about approaching vehicles.
 
-1. Detect approaching vehicles.
-2. Determine the traffic situation.
-3. Warn drivers about approaching traffic.
-4. Monitor the blind-curve region using a camera.
-5. Record visual information.
-6. Store the recorded information with timestamps.
-7. Provide a foundation for future intelligent traffic analysis.
+The objective of this project is therefore to create an **active, real-time warning system** capable of detecting vehicles before they reach the blind curve and informing the driver on the opposite side.
 
 ---
 
 # 💡 Proposed Solution
 
-The proposed system uses embedded hardware installed around a blind curve.
+The system places vehicle-detection units on both sides of the blind curve.
 
-The basic concept is:
+Each side has an **ESP32 sensing node** containing three ultrasonic sensors.
 
-```text
-             VEHICLE APPROACHES
-                     │
-                     ▼
-              Vehicle Detection
-                     │
-                     ▼
-               ESP32 Controller
-                     │
-          ┌──────────┴──────────┐
-          │                     │
-          ▼                     ▼
-     Warning System         ESP32-CAM
-          │                     │
-          ▼                     ▼
-   Alert Opposite Side     Live Monitoring
-                                │
-                                ▼
-                         Recording / Storage
-                                │
-                                ▼
-                         Timestamped Footage
-```
+The sensors are used for:
 
-The system therefore provides both:
+1. Detecting a vehicle.
+2. Determining approximate vehicle type.
+3. Measuring the time taken by the vehicle to travel between two sensing points.
+4. Calculating vehicle speed.
+5. Determining the direction of travel.
+6. Estimating the time required to reach the curve.
 
-### 🚨 Prevention
+The information is transmitted using **LoRa** to a central **ESP8266 NodeMCU**.
 
-Warn the driver about approaching traffic before entering the blind section.
+The ESP8266 maintains separate vehicle queues for the two directions and calculates the current traffic condition.
 
-### 📹 Monitoring
+It then communicates the required warning state to an **Arduino Nano** through I²C.
 
-Capture and store visual information from the blind curve.
+The Nano controls:
+
+* Red LEDs
+* Green LEDs
+* Buzzer
+
+Two LCD displays connected to the ESP8266 provide information about approaching vehicles and their ETA.
+
+An additional **ESP32-CAM** provides visual monitoring and recording of the curve.
 
 ---
 
-# 🧠 Core Idea
+# 🧠 Core Concept
 
-The system is based on a simple safety principle:
+The fundamental concept is:
 
-> **Detect early → communicate early → warn early → monitor continuously → reduce collision risk.**
+> **Detect → Identify → Measure → Transmit → Calculate → Warn → Monitor**
 
-A blind curve should not be treated as an isolated point.
-
-Instead, the system should continuously understand:
+The complete system can be represented as:
 
 ```text
-             APPROACHING AREA
-                    │
-                    ▼
-          ┌──────────────────┐
-          │ Vehicle Detection│
-          └────────┬─────────┘
-                   │
-                   ▼
-          ┌──────────────────┐
-          │ Traffic Condition│
-          └────────┬─────────┘
-                   │
-          ┌────────┴─────────┐
-          ▼                  ▼
-      Safe State        Vehicle Present
-          │                  │
-          ▼                  ▼
-      Normal             Warning
-                             │
-                             ▼
-                      Driver Awareness
+Vehicle Approaches
+        │
+        ▼
+Ultrasonic Detection
+        │
+        ▼
+Vehicle Classification
+        │
+        ▼
+Speed Measurement
+        │
+        ▼
+ETA Calculation
+        │
+        ▼
+LoRa Transmission
+        │
+        ▼
+ESP8266 Central Controller
+        │
+        ▼
+Traffic Queue
+        │
+        ▼
+Priority Decision
+        │
+        ▼
+Arduino Nano
+        │
+        ├────────► Green / Red LEDs
+        │
+        └────────► Buzzer
+        │
+        ▼
+Driver Warning
+```
+
+At the same time:
+
+```text
+Blind Curve
+    │
+    ▼
+ESP32-CAM
+    │
+    ▼
+Wi-Fi
+    │
+    ├────────► Live Browser Stream
+    │
+    └────────► OpenCV Recorder
+                       │
+                       ▼
+                Timestamped Video
 ```
 
 ---
 
-# 🚀 Current Implementation
+# 🏗️ Complete System Architecture
 
-The project is being developed incrementally.
+```text
+                              BLIND CURVE
+                         ╱                  ╲
+                        ╱                    ╲
+                       ╱                      ╲
+                      ╱                        ╲
+                     🚗                        🚙
+                     │                          │
+                     ▼                          ▼
+              ┌─────────────┐            ┌─────────────┐
+              │ ESP32       │            │ ESP32       │
+              │ UPPER NODE  │            │ LOWER NODE  │
+              └──────┬──────┘            └──────┬──────┘
+                     │                          │
+                     │        LoRa              │
+                     └───────────┬──────────────┘
+                                 │
+                                 ▼
+                       ┌──────────────────┐
+                       │ ESP8266 NodeMCU  │
+                       │ Central Receiver │
+                       └────────┬─────────┘
+                                │
+                           I²C / Wire
+                                │
+                                ▼
+                       ┌──────────────────┐
+                       │  Arduino Nano    │
+                       │ Output Controller│
+                       └───────┬──────────┘
+                               │
+                  ┌────────────┼────────────┐
+                  ▼            ▼            ▼
+              UP LEDs       DOWN LEDs     Buzzer
+                  │            │
+                  └──────┬─────┘
+                         ▼
+                    Driver Alert
 
-The current working prototype includes:
 
-### ✅ ESP32-based control
+                       ESP32-CAM
+                           │
+                         Wi-Fi
+                           │
+                 ┌─────────┴─────────┐
+                 ▼                   ▼
+            Web Browser           OpenCV
+            Live Stream          Recorder
+                                      │
+                                      ▼
+                              Timestamped MP4
+```
 
-The ESP32 is used as the embedded controller for the system.
+---
 
-### ✅ ESP32-CAM integration
+# 🔧 Hardware Architecture
 
-An ESP32-CAM has been added to provide visual monitoring of the road/curve.
+## 1. ESP32 Upper Node
 
-### ✅ Wi-Fi connectivity
+One ESP32 is installed on the **upper side of the blind curve**.
 
-The ESP32-CAM connects to a Wi-Fi network or mobile hotspot.
+It uses three ultrasonic sensors:
 
-Once connected, the camera can be accessed through its assigned local IP address.
+```text
+U1 → Vehicle detection
+U2 → Vehicle height/type detection
+U3 → Speed measurement
+```
+
+The node determines:
+
+* Vehicle presence
+* Vehicle type
+* Speed
+* Direction
+* Distance to curve
+
+The resulting information is transmitted through LoRa.
+
+---
+
+# 2. ESP32 Lower Node
+
+The second ESP32 is installed on the **lower side of the blind curve**.
+
+It uses the same sensing arrangement:
+
+```text
+U1 → Vehicle detection
+U2 → Vehicle height/type detection
+U3 → Speed measurement
+```
+
+The lower node generates packets with the direction:
+
+```text
+DOWN
+```
+
+while the upper node generates:
+
+```text
+UP
+```
+
+---
+
+# 3. ESP8266 NodeMCU
+
+The **ESP8266 NodeMCU** is the central controller.
+
+It receives vehicle information from both ESP32 nodes through LoRa.
+
+Its main responsibilities are:
+
+* LoRa packet reception
+* Packet parsing
+* Vehicle queue management
+* ETA calculation
+* Vehicle removal
+* Priority calculation
+* LCD control
+* Communication with Arduino Nano
+* Monitoring vehicle passage at the curve
+
+The ESP8266 therefore acts as the **decision-making and information-management controller**.
+
+---
+
+# 4. Arduino Nano
+
+The Arduino Nano acts as the **output and curve-monitoring controller**.
+
+It receives a system-state command from the ESP8266 through I²C.
+
+It controls:
+
+* Upper green LED
+* Upper red LED
+* Lower green LED
+* Lower red LED
+* Buzzer
+
+It also has two additional ultrasonic sensors to detect when a vehicle has actually passed the curve.
+
+The Nano communicates vehicle-passage information back to the ESP8266 through dedicated digital pulse outputs.
+
+---
+
+# 5. ESP32-CAM
+
+The **AI-Thinker ESP32-CAM** is the visual monitoring component.
+
+It provides:
+
+* Camera capture
+* Wi-Fi connectivity
+* Browser-based live streaming
+* Local network access
+* Visual monitoring of the blind curve
+
+The current firmware uses the standard ESP32 Camera Web Server architecture with:
+
+```text
+CAMERA_MODEL_AI_THINKER
+```
+
+The camera can be accessed through the IP address assigned by the Wi-Fi network.
 
 Example:
 
@@ -182,453 +413,939 @@ Example:
 http://<ESP32-CAM-IP>
 ```
 
-For example, during testing an IP such as:
-
-```text
-http://192.168.1.101
-```
-
-can be used depending on the network assigned to the ESP32-CAM.
-
-> The IP address is not fixed and can change whenever the ESP32-CAM connects to a different network or receives a different DHCP address.
-
-### ✅ Live camera streaming
-
-The ESP32-CAM provides a browser-accessible live camera stream.
-
-This allows the operator to observe the monitored area in real time from a device connected to the same network.
-
-### ✅ Video/image recording workflow
-
-The current development direction includes recording the camera output for later observation and analysis.
-
-### ✅ Timestamped storage
-
-Recorded information is associated with a timestamp so that the system can determine **when the event or footage occurred**.
-
-This is important for:
-
-* Traffic analysis
-* Event verification
-* Accident investigation
-* System testing
-* Future AI analysis
-* Historical monitoring
-
 ---
 
-# 📹 ESP32-CAM Monitoring System
+# 6. LoRa SX1278
 
-The ESP32-CAM is an important addition to the original blind-curve system.
-
-Instead of relying only on sensors, the system now has a visual monitoring component.
-
-## Camera Architecture
+The project uses **three SX1278 433 MHz LoRa modules**.
 
 ```text
-                    ┌─────────────────────┐
-                    │      ESP32-CAM      │
-                    │                     │
-                    │   Camera Sensor     │
-                    │         │           │
-                    │         ▼           │
-                    │   Image Processing  │
-                    │         │           │
-                    │         ▼           │
-                    │     Wi-Fi Module    │
-                    └─────────┬───────────┘
-                              │
-                              │ Wi-Fi
-                              ▼
-                    ┌─────────────────────┐
-                    │   Local Network     │
-                    │ Wi-Fi / Mobile      │
-                    │ Hotspot             │
-                    └─────────┬───────────┘
-                              │
-                              ▼
-                    ┌─────────────────────┐
-                    │ Phone / PC / Browser│
-                    └─────────────────────┘
+ESP32 Upper
+     │
+   LoRa
+     │
+     ├──────────────┐
+     │              │
+ESP32 Lower         │
+     │              │
+   LoRa              ▼
+                ESP8266
+```
+
+LoRa is used because the blind-curve nodes may need communication over longer distances than ordinary short-range wired connections.
+
+The current configuration uses:
+
+```text
+Frequency        : 433 MHz
+Spreading Factor : 7
+Bandwidth        : 125 kHz
+Coding Rate      : 4/5
+TX Power         : 17
+Preamble Length  : 8
+Sync Word        : 0x12
+CRC              : Enabled
 ```
 
 ---
 
-# 📡 Wi-Fi Operation
+# 📡 Communication Architecture
 
-The ESP32-CAM connects to a configured Wi-Fi network.
+The project uses multiple communication methods.
 
-The network can be:
+## LoRa
 
-* Home Wi-Fi
-* Router
-* Mobile hotspot
-* Local wireless network
-
-For testing, a smartphone hotspot can be used.
-
-The overall process is:
+Used between:
 
 ```text
-Mobile Hotspot / Wi-Fi
-          │
-          ▼
-      ESP32-CAM
-          │
-          ▼
-   Obtain IP Address
-          │
-          ▼
-   Open IP in Browser
-          │
-          ▼
-    Camera Interface
-          │
-          ▼
-     Live Stream
+ESP32 Upper Node
+        ↓
+      LoRa
+        ↓
+ESP8266 Central Controller
 ```
 
----
-
-# 🌐 Accessing the Camera
-
-After powering the ESP32-CAM:
-
-1. Connect the ESP32-CAM to the configured Wi-Fi network.
-2. Open the Serial Monitor.
-3. Wait for the ESP32-CAM to connect.
-4. Note the IP address printed by the ESP32.
-5. Connect the computer/phone to the same network.
-6. Enter the IP address into a browser.
-
-Example:
+and:
 
 ```text
-http://192.168.1.101
+ESP32 Lower Node
+        ↓
+      LoRa
+        ↓
+ESP8266 Central Controller
 ```
 
-The actual IP may be different.
+## I²C
 
----
+Used between:
 
-# 📹 Live Monitoring
+```text
+ESP8266
+   │
+  I²C
+   │
+Arduino Nano
+```
 
-The camera provides a browser-based interface for monitoring.
+The Nano is configured as I²C address:
 
-The basic operation is:
+```text
+8
+```
+
+## Digital Pulse
+
+Used by the Nano to inform the ESP8266 when a vehicle has passed the monitored curve region.
+
+## Wi-Fi
+
+Used by:
 
 ```text
 ESP32-CAM
-     │
-     ▼
-Camera Capture
-     │
-     ▼
-Wi-Fi Transmission
-     │
-     ▼
-Local Web Server
-     │
-     ▼
-Browser
-     │
-     ▼
-Live Camera View
+     ↓
+ Wi-Fi Network
+     ↓
+Phone / PC Browser
 ```
 
-This allows the blind curve to be monitored without requiring a dedicated display connected directly to the camera.
+and for the OpenCV recording application.
 
 ---
 
-# ⏱️ Timestamped Recording
+# 🚗 Vehicle Detection
 
-One of the current project objectives is to record the monitored area and associate the footage/events with timestamps.
+Each ESP32 sensing node uses three HC-SR04 ultrasonic sensors.
 
-The concept is:
+### Sensor U1 — Vehicle Detection
+
+The first sensor detects the arrival of a vehicle.
+
+When the measured distance becomes less than approximately:
 
 ```text
-Camera Frame
-     │
-     ▼
-Capture
-     │
-     ▼
-Timestamp
-     │
-     ▼
-Store
-     │
-     ▼
-Recorded Evidence
+15 cm
 ```
 
-Timestamping makes the recorded information much more useful because an event can be correlated with its exact time.
+the system registers a vehicle.
+
+---
+
+# 🚛 Vehicle Classification
+
+The second ultrasonic sensor is used to estimate vehicle height.
+
+The current classification is:
+
+```text
+U1 detects vehicle
+        │
+        ▼
+Check U2
+        │
+    ┌───┴────┐
+    │        │
+  <15 cm   >=15 cm
+    │        │
+    ▼        ▼
+  HEAVY     LIGHT
+```
+
+Therefore, the system currently classifies vehicles as:
+
+```text
+LIGHT
+HEAVY
+```
+
+This is an experimental prototype classification based on the sensor geometry and should not be interpreted as a production-grade vehicle-classification method.
+
+---
+
+# ⏱️ Speed Measurement
+
+The ESP32 uses two sensing points separated by:
+
+```text
+SENSOR_DISTANCE = 0.20 m
+```
+
+The time between detection at the first and second measurement points is used to calculate speed.
+
+The basic equation is:
+
+```text
+Speed = Distance / Time
+```
+
+The calculated speed in m/s is converted to km/h:
+
+```text
+Speed(km/h) = Speed(m/s) × 3.6
+```
 
 Example:
 
 ```text
-2026-09-12 12:30:15
-Vehicle detected / Camera event
+Distance = 0.20 m
+Time     = measured travel time
 
-2026-09-12 12:30:18
-Vehicle approaching curve
-
-2026-09-12 12:30:24
-Vehicle passes monitored area
+Speed = 0.20 / Time
 ```
 
-The timestamp mechanism can be further improved using network time synchronization such as NTP.
-
 ---
 
-# 🛠️ Hardware Components
+# 📍 Curve Distance
 
-The project consists of embedded hardware for detection, control, communication, warning, and visual monitoring.
-
-| Component                        | Purpose                                |
-| -------------------------------- | -------------------------------------- |
-| **ESP32**                        | Main embedded controller               |
-| **ESP32-CAM**                    | Visual monitoring and camera streaming |
-| **Camera Sensor**                | Captures the road/curve                |
-| **Vehicle Detection Sensors**    | Detect approaching vehicles            |
-| **LED Indicators**               | Visual warning                         |
-| **Buzzer / Alert Output**        | Audible warning                        |
-| **Wi-Fi Network / Hotspot**      | Wireless communication                 |
-| **Power Supply**                 | Provides power to the system           |
-| **Breadboard / Prototype Board** | Hardware prototyping                   |
-| **Jumper Wires**                 | Electrical connections                 |
-
-The exact sensor and GPIO configuration is available in the code and project documentation.
-
----
-
-# 🔌 ESP32 Responsibilities
-
-The ESP32 acts as the main embedded processing unit.
-
-Its responsibilities can include:
-
-* Reading sensor inputs.
-* Detecting vehicle presence.
-* Processing detection information.
-* Controlling warning indicators.
-* Managing system states.
-* Communicating with other modules.
-* Supporting future IoT functionality.
-
-Basic architecture:
+The current prototype uses:
 
 ```text
-             SENSOR INPUT
-                  │
-                  ▼
-          ┌──────────────┐
-          │    ESP32     │
-          │  Controller  │
-          └──────┬───────┘
+CURVE_DISTANCE = 1.0 m
+```
+
+as the distance from the sensing point to the curve.
+
+This value is used by the central controller for ETA calculation.
+
+For an actual road deployment, this parameter would be changed according to the physical installation.
+
+---
+
+# ⏳ ETA Calculation
+
+The ESP8266 calculates the estimated time required for a vehicle to reach the curve.
+
+The basic equation is:
+
+```text
+ETA = Distance / Speed
+```
+
+The code converts speed from km/h to m/s:
+
+```text
+Speed(m/s) = Speed(km/h) / 3.6
+```
+
+Therefore:
+
+```text
+ETA = DEMO_DISTANCE / (Speed / 3.6)
+```
+
+If the speed is extremely low, the system assigns a large ETA value rather than dividing by a near-zero speed.
+
+---
+
+# 📦 LoRa Data Packet
+
+The ESP32 nodes transmit vehicle information in a simple comma-separated format.
+
+Example:
+
+```text
+UP,HEAVY,24.5,1
+```
+
+or:
+
+```text
+DOWN,LIGHT,18.2,1
+```
+
+The fields represent:
+
+```text
+Direction,Vehicle Type,Speed,Curve Distance
+```
+
+For example:
+
+```text
+UP
+```
+
+means the vehicle is travelling from the upper side.
+
+```text
+HEAVY
+```
+
+represents the detected vehicle type.
+
+```text
+24.5
+```
+
+represents the calculated speed in km/h.
+
+```text
+1
+```
+
+represents the configured curve distance in metres.
+
+---
+
+# 🧮 Central Vehicle Queue
+
+The ESP8266 maintains two independent queues:
+
+```text
+UP Queue
+DOWN Queue
+```
+
+Each vehicle stores:
+
+```text
+Direction
+Vehicle Type
+Speed
+ETA
+Received Time
+Active State
+```
+
+The maximum queue size in the current implementation is:
+
+```text
+MAX_QUEUE = 5
+```
+
+Therefore:
+
+```text
+              ESP8266
                  │
-       ┌─────────┼─────────┐
-       ▼         ▼         ▼
-    Warning   Communication  Camera
-    System       System      System
+        ┌────────┴────────┐
+        ▼                 ▼
+    UP Queue           DOWN Queue
+   Maximum 5          Maximum 5
+    vehicles            vehicles
 ```
 
----
-
-# 📷 ESP32-CAM Responsibilities
-
-The ESP32-CAM provides the visual layer of the project.
-
-Its responsibilities include:
-
-* Capturing images/video.
-* Providing live camera streaming.
-* Connecting to Wi-Fi.
-* Hosting the camera web interface.
-* Supporting recording/storage functionality.
-* Providing timestamped visual data.
-* Creating a foundation for future computer-vision functionality.
-
-The ESP32-CAM therefore extends the system from a **sensor-only safety system** into a **sensor + vision-based monitoring system**.
+This allows the system to handle multiple approaching vehicles rather than only a single vehicle.
 
 ---
 
-# 🏗️ Overall System Architecture
+# 🔄 Queue Operation
+
+When a new vehicle packet arrives:
 
 ```text
-                       BLIND CURVE
-                  ╱                  ╲
-                 ╱                    ╲
-                ╱                      ╲
-               ╱                        ╲
-              🚗                        🚙
-               │                         │
-               ▼                         ▼
-        Vehicle Detection A       Vehicle Detection B
-               │                         │
-               └──────────┬──────────────┘
-                          │
-                          ▼
-                  ┌───────────────┐
-                  │     ESP32     │
-                  │   Controller  │
-                  └───────┬───────┘
-                          │
-              ┌───────────┼───────────┐
-              │           │           │
-              ▼           ▼           ▼
-          Warning     Wireless     System Logic
-           System    Communication
-              │
-              ▼
-       Opposite-side Alert
-
-
-                  ┌─────────────────┐
-                  │    ESP32-CAM    │
-                  └────────┬────────┘
-                           │
-                           ▼
-                       Camera
-                           │
-                           ▼
-                    Live Video Feed
-                           │
-                           ▼
-                  Recording / Storage
-                           │
-                           ▼
-                    Timestamped Data
+LoRa Packet
+    │
+    ▼
+Parse Packet
+    │
+    ▼
+Determine Direction
+    │
+    ├─────────────┐
+    ▼             ▼
+ UP Queue      DOWN Queue
 ```
+
+If a queue becomes full, the oldest vehicle is removed before adding the new vehicle.
 
 ---
 
-# 🚦 Blind-Curve Warning Logic
+# 🚦 Priority Logic
 
-The basic warning concept is two-directional.
-
-## Vehicle approaching from Side A
+The central controller uses four primary states:
 
 ```text
-Side A
-  │
-  │ 🚗
-  ▼
-[Detection A]
-  │
-  ▼
-ESP32
-  │
-  ▼
-Warning B
-  │
-  ▼
-Driver on Side B is alerted
+0 = SAFE
+1 = ABOVE VEHICLE ONLY
+2 = BELOW VEHICLE ONLY
+3 = BOTH SIDES
 ```
 
-## Vehicle approaching from Side B
+### State 0 — Safe
+
+No vehicle is approaching.
 
 ```text
-Side B
-  │
-  │ 🚙
-  ▼
-[Detection B]
-  │
-  ▼
-ESP32
-  │
-  ▼
-Warning A
-  │
-  ▼
-Driver on Side A is alerted
+UP   → CLEAR
+DOWN → CLEAR
 ```
 
-This prevents the warning system from being dependent on only one direction.
-
----
-
-# 🔄 Complete System Flow
+Both sides show:
 
 ```text
-                         START
-                           │
-                           ▼
-                   Initialize System
-                           │
-                           ▼
-                 Initialize ESP32
-                           │
-                           ▼
-                Initialize ESP32-CAM
-                           │
-                           ▼
-                     Connect Wi-Fi
-                           │
-                           ▼
-                  Start Camera Server
-                           │
-                           ▼
-                 Start System Monitoring
-                           │
-                           ▼
-                 Read Vehicle Sensors
-                           │
-                           ▼
-                  Capture Camera Data
-                           │
-                           ▼
-              ┌────────────────────────┐
-              │ Vehicle Detected ?     │
-              └───────────┬────────────┘
-                          │
-              ┌───────────┴───────────┐
-              │                       │
-             YES                      NO
-              │                       │
-              ▼                       ▼
-      Determine Direction        Continue Monitoring
-              │
-              ▼
-       Activate Warning
-              │
-              ▼
-       Record Event / Data
-              │
-              ▼
-       Add Timestamp
-              │
-              ▼
-       Store / Process Data
-              │
-              ▼
-        Continue Monitoring
+No Vehicle
+SAFE TO GO
 ```
 
 ---
 
-# 🧩 Block Diagram
+### State 1 — Vehicle Above Only
 
-The project block diagram is available in:
+A vehicle is approaching from the upper direction.
 
-**[BlockDiagram.png](./BlockDiagram.png)**
+The system warns the lower side.
 
-The diagram represents the relationship between the sensing, processing, warning, communication, and monitoring sections of the system.
+```text
+UP   → Vehicle
+DOWN → Warning
+```
 
 ---
 
-# 📊 Flowcharts
+### State 2 — Vehicle Below Only
 
-The repository contains separate flowcharts for the curve system and ESP32 implementation.
+A vehicle is approaching from the lower direction.
 
-### Blind Curve Flowchart
+The system warns the upper side.
 
-![Blind Curve Flowchart](./Flow_Chart_Curve.png)
+```text
+UP   → Warning
+DOWN → Vehicle
+```
 
-### ESP32 Flowchart
+---
 
-![ESP32 Flowchart](./Flow_Chart_esp32.png)
+### State 3 — Vehicles From Both Sides
+
+Vehicles are approaching from both directions.
+
+The system enters the highest-warning state.
+
+The buzzer is activated intermittently.
+
+---
+
+# 🚨 Warning System
+
+The Arduino Nano controls four LEDs:
+
+```text
+UP GREEN
+UP RED
+
+DOWN GREEN
+DOWN RED
+```
+
+and one buzzer.
+
+The current output states are:
+
+| System State | Upper Side | Lower Side | Buzzer   |
+| ------------ | ---------- | ---------- | -------- |
+| SAFE         | 🟢 Green   | 🟢 Green   | OFF      |
+| ABOVE ONLY   | 🟢 Green   | 🔴 Red     | OFF      |
+| BELOW ONLY   | 🔴 Red     | 🟢 Green   | OFF      |
+| BOTH SIDES   | 🔴 Red     | 🟢 Green   | Flashing |
+
+The warning logic is designed to provide immediate information to drivers approaching the curve.
+
+---
+
+# 📺 Dual LCD Display
+
+The ESP8266 controls two 16×2 I²C LCD displays.
+
+The LCDs represent the two sides of the curve:
+
+```text
+Upper LCD
+Lower LCD
+```
+
+When no vehicle is present:
+
+```text
+No Vehicle
+SAFE TO GO
+```
+
+When a vehicle approaches:
+
+```text
+Vehicle Below
+ETA:03 GO SLOW
+```
+
+or:
+
+```text
+Vehicle Above
+ETA:02 PROCEED
+```
+
+depending on the current traffic state.
+
+Longer messages can be scrolled across the LCD.
+
+---
+
+# 🔔 Vehicle-Passed Detection
+
+The Arduino Nano contains two additional ultrasonic sensors:
+
+```text
+Upper Curve Sensor
+Lower Curve Sensor
+```
+
+These sensors detect when vehicles have passed the monitored curve region.
+
+When a vehicle passes:
+
+```text
+Nano Sensor
+     │
+     ▼
+Vehicle Passed
+     │
+     ▼
+Digital Pulse
+     │
+     ▼
+ESP8266
+     │
+     ▼
+Remove Vehicle From Queue
+     │
+     ▼
+Update Priority
+     │
+     ▼
+Update Displays
+```
+
+This prevents vehicles that have already passed the curve from remaining indefinitely in the central queue.
+
+---
+
+# 🧩 Complete System Operation
+
+The complete process is:
+
+```text
+                    VEHICLE APPROACHES
+                           │
+                           ▼
+                    U1 Detection
+                           │
+                           ▼
+                 Vehicle Registered
+                           │
+                           ▼
+                    U2 Measurement
+                           │
+                           ▼
+              LIGHT / HEAVY Classification
+                           │
+                           ▼
+                    U3 Detection
+                           │
+                           ▼
+                    Speed Calculation
+                           │
+                           ▼
+                    Direction Added
+                           │
+                           ▼
+                    ETA Calculation
+                           │
+                           ▼
+                     LoRa Packet
+                           │
+                           ▼
+                    ESP8266 Receiver
+                           │
+                           ▼
+                     Queue Storage
+                           │
+                           ▼
+                    Priority Logic
+                           │
+                           ▼
+                      I²C Command
+                           │
+                           ▼
+                     Arduino Nano
+                           │
+              ┌────────────┼────────────┐
+              ▼            ▼            ▼
+          Red/Green      Buzzer       Curve
+             LEDs                     Sensors
+              │                         │
+              ▼                         ▼
+         Driver Alert             Vehicle Passed
+                                        │
+                                        ▼
+                                  Queue Updated
+```
+
+---
+
+# 📹 ESP32-CAM Visual Monitoring
+
+The ESP32-CAM is an additional subsystem for monitoring the blind curve.
+
+It is configured for the:
+
+```text
+AI-Thinker ESP32-CAM
+```
+
+camera model.
+
+The ESP32-CAM connects to Wi-Fi and starts a camera web server.
+
+```text
+ESP32-CAM
+    │
+    ▼
+Camera Sensor
+    │
+    ▼
+JPEG Frames
+    │
+    ▼
+Wi-Fi
+    │
+    ▼
+Web Server
+    │
+    ▼
+Browser
+```
+
+---
+
+# 🌐 Live Camera Stream
+
+Once the ESP32-CAM connects to Wi-Fi, its local IP address is displayed through the Serial Monitor.
+
+Example:
+
+```text
+Camera Ready! Use 'http://192.168.x.x' to connect
+```
+
+The exact address depends on the Wi-Fi network.
+
+The ESP32-CAM can be connected to:
+
+* Wi-Fi router
+* Mobile hotspot
+* Local wireless network
+
+A phone hotspot can therefore be used for field testing.
+
+---
+
+# 📡 ESP32-CAM Network Flow
+
+```text
+             Wi-Fi Router / Hotspot
+                       │
+                       │
+                       ▼
+                 ESP32-CAM
+                       │
+                       ▼
+                Local IP Address
+                       │
+          ┌────────────┴────────────┐
+          ▼                         ▼
+      Phone Browser            Laptop Browser
+          │                         │
+          └────────────┬────────────┘
+                       ▼
+                 Live Camera
+```
+
+---
+
+# 🎥 Video Recording
+
+The repository contains:
+
+```text
+Codes/blind_curve_recorder.py
+```
+
+This Python program uses:
+
+```text
+OpenCV
+```
+
+to connect to the ESP32-CAM stream.
+
+The current stream URL in the script is:
+
+```text
+http://10.140.172.57:81/stream
+```
+
+This IP should be changed whenever the ESP32-CAM receives a different address from the network.
+
+---
+
+# 💾 Continuous Recording
+
+The Python recorder continuously reads frames from the ESP32-CAM.
+
+The recording duration is currently configured as:
+
+```text
+FILE_DURATION = 300 seconds
+```
+
+which equals:
+
+```text
+5 minutes
+```
+
+Therefore, the recorder automatically creates a new video file every five minutes.
+
+Example:
+
+```text
+BlindCurve_2026-09-12_12-30-00.mp4
+BlindCurve_2026-09-12_12-35-00.mp4
+BlindCurve_2026-09-12_12-40-00.mp4
+```
+
+---
+
+# ⏱️ Timestamp Overlay
+
+The recorder adds the current date and time directly onto every video frame.
+
+The timestamp format is:
+
+```text
+DD-MM-YYYY  HH:MM:SS
+```
+
+Example:
+
+```text
+12-09-2026  12:30:15
+```
+
+This provides a time reference for recorded events.
+
+---
+
+# 🗂️ Recording Folder
+
+The Python program automatically creates:
+
+```text
+BlindCurve_Recordings/
+```
+
+if the directory does not already exist.
+
+The recorded videos are stored inside this directory.
+
+---
+
+# 🔄 Stream Reconnection
+
+The recording program also handles stream interruptions.
+
+If the ESP32-CAM stream is lost:
+
+```text
+Stream Lost
+    │
+    ▼
+Release Camera Connection
+    │
+    ▼
+Attempt Reconnection
+    │
+    ▼
+Resume Recording
+```
+
+This allows the recorder to recover from temporary network interruptions.
+
+---
+
+# 🖥️ Live + Recording Architecture
+
+The camera subsystem operates as:
+
+```text
+                       ESP32-CAM
+                           │
+                           ▼
+                     Camera Capture
+                           │
+                           ▼
+                         Wi-Fi
+                           │
+                           ▼
+                    HTTP Stream :81
+                           │
+              ┌────────────┴────────────┐
+              ▼                         ▼
+        Web Browser                 OpenCV
+        Live Viewing               Recorder
+                                        │
+                                        ▼
+                                  Timestamp
+                                        │
+                                        ▼
+                                  MP4 Writer
+                                        │
+                                        ▼
+                            BlindCurve_Recordings
+```
+
+---
+
+# 🛠️ Hardware Requirements
+
+The project documentation specifies the following main hardware:
+
+| S.No. | Component               | Specification           |    Quantity |
+| ----: | ----------------------- | ----------------------- | ----------: |
+|     1 | ESP32 Development Board | ESP32 DevKit V1         |           2 |
+|     2 | ESP8266                 | NodeMCU ESP-12E         |           1 |
+|     3 | Arduino Nano            | ATmega328P              |           1 |
+|     4 | LoRa Module             | SX1278, 433 MHz         |           3 |
+|     5 | Ultrasonic Sensor       | HC-SR04                 |           8 |
+|     6 | LCD Display             | 16×2 with I²C           |           2 |
+|     7 | LED Indicators          | 5 mm                    |           4 |
+|     8 | Active Buzzer           | 5 V                     |           1 |
+|     9 | Jumper Wires            | Male-Male / Male-Female | As required |
+|    10 | Power Supply            | 5 V DC                  |           3 |
+|    11 | ESP32-CAM               | AI-Thinker              |           1 |
+|    12 | Computer                | For OpenCV recording    |           1 |
+
+The ESP32-CAM and recording subsystem were added after the original project documentation.
+
+---
+
+# 🔌 ESP32 Upper/Lower Node Pin Configuration
+
+The ESP32 sensing nodes use:
+
+```text
+U1:
+TRIG1 = GPIO 14
+ECHO1 = GPIO 27
+
+U2:
+TRIG2 = GPIO 26
+ECHO2 = GPIO 25
+
+U3:
+TRIG3 = GPIO 33
+ECHO3 = GPIO 32
+```
+
+LoRa:
+
+```text
+SS   = GPIO 5
+DIO0 = GPIO 4
+```
+
+Both the upper and lower ESP32 sensing programs use this hardware configuration.
+
+The transmitted direction differs:
+
+```text
+sender_up   → UP
+sender_down → DOWN
+```
+
+---
+
+# 🔌 ESP8266 Pin Configuration
+
+The ESP8266 central controller uses:
+
+```text
+LoRa SS   = GPIO 15
+LoRa DIO0 = GPIO 16
+```
+
+Curve passage inputs:
+
+```text
+UP_PASS   = D3
+DOWN_PASS = D4
+```
+
+I²C:
+
+```text
+SDA = D2
+SCL = D1
+```
+
+LCD addresses:
+
+```text
+Upper LCD = 0x27
+Lower LCD = 0x23
+```
+
+Arduino Nano:
+
+```text
+I²C Address = 8
+```
+
+---
+
+# 🔌 Arduino Nano Pin Configuration
+
+### Upper Curve Sensor
+
+```text
+TRIG_UP = D2
+ECHO_UP = D3
+```
+
+### Lower Curve Sensor
+
+```text
+TRIG_DOWN = D4
+ECHO_DOWN = D5
+```
+
+### Upper LEDs
+
+```text
+UP_GREEN = D6
+UP_RED   = D7
+```
+
+### Lower LEDs
+
+```text
+DOWN_GREEN = D8
+DOWN_RED   = D9
+```
+
+### Buzzer
+
+```text
+BUZZER = D10
+```
+
+### ESP8266 Signals
+
+```text
+UP_PASS   = D11
+DOWN_PASS = D12
+```
 
 ---
 
@@ -637,152 +1354,507 @@ The repository contains separate flowcharts for the curve system and ESP32 imple
 ```text
 Accident-Prevention-System-at-Blind-Curves/
 │
-├── Codes/
-│   ├── ESP32 source code
-│   ├── ESP32-CAM source code
-│   └── Supporting embedded code
-│
-├── Images/
-│   ├── Hardware images
-│   ├── Prototype images
-│   └── Project photographs
-│
 ├── BlockDiagram.png
-│   └── Overall system block diagram
 │
 ├── Flow_Chart_Curve.png
-│   └── Blind curve system flowchart
-│
 ├── Flow_Chart_esp32.png
-│   └── ESP32 flowchart
+│
+├── Codes/
+│   │
+│   ├── ard_nan/
+│   │   └── ard_nan.ino
+│   │       └── Arduino Nano controller
+│   │
+│   ├── receiver8266/
+│   │   └── receiver8266.ino
+│   │       └── ESP8266 central receiver/controller
+│   │
+│   ├── sender_up/
+│   │   └── sender_up.ino
+│   │       └── Upper ESP32 sensing node
+│   │
+│   ├── sender_down/
+│   │   └── sender_down.ino
+│   │       └── Lower ESP32 sensing node
+│   │
+│   ├── CameraWebServer/
+│   │   ├── CameraWebServer.ino
+│   │   ├── app_httpd.cpp
+│   │   ├── board_config.h
+│   │   ├── camera_index.h
+│   │   ├── camera_pins.h
+│   │   ├── ci.yml
+│   │   └── partitions.csv
+│   │       └── ESP32-CAM web server
+│   │
+│   └── blind_curve_recorder.py
+│       └── OpenCV timestamped recorder
+│
+├── Images/
+│   ├── a1.jpeg
+│   ├── a2.jpeg
+│   ├── a3.jpeg
+│   ├── a4.jpeg
+│   ├── c1.jpeg
+│   ├── c2.jpeg
+│   ├── u1.jpeg
+│   └── u2.jpeg
 │
 ├── Doc.pdf
-│   └── Detailed project documentation
 │
 ├── Presentation.pptx
-│   └── Project presentation
 │
 └── README.md
-    └── Project documentation
 ```
 
-The repository currently contains the project code, images, system diagrams, documentation, and presentation.
+---
+
+# 📂 Code Description
+
+## `sender_up/sender_up.ino`
+
+Firmware for the upper ESP32 sensing node.
+
+Functions:
+
+* Reads three ultrasonic sensors.
+* Detects vehicles.
+* Classifies vehicle as LIGHT/HEAVY.
+* Calculates speed.
+* Creates `UP` LoRa packets.
+* Sends vehicle information to the ESP8266.
+
+---
+
+## `sender_down/sender_down.ino`
+
+Firmware for the lower ESP32 sensing node.
+
+Functions:
+
+* Reads three ultrasonic sensors.
+* Detects vehicles.
+* Classifies vehicle as LIGHT/HEAVY.
+* Calculates speed.
+* Creates `DOWN` LoRa packets.
+* Sends vehicle information to the ESP8266.
+
+---
+
+## `receiver8266/receiver8266.ino`
+
+Main central-controller firmware.
+
+Functions:
+
+* Receives LoRa packets.
+* Parses vehicle information.
+* Maintains UP/DOWN queues.
+* Calculates ETA.
+* Removes expired vehicles.
+* Determines traffic priority.
+* Updates LCDs.
+* Sends commands to Arduino Nano.
+* Detects vehicles after passing the curve.
+
+---
+
+## `ard_nan/ard_nan.ino`
+
+Arduino Nano firmware.
+
+Functions:
+
+* Receives state commands through I²C.
+* Controls LEDs.
+* Controls buzzer.
+* Detects vehicles passing the curve.
+* Sends passage pulses to the ESP8266.
+
+---
+
+## `CameraWebServer/`
+
+ESP32-CAM firmware.
+
+Functions:
+
+* Initializes AI-Thinker camera.
+* Connects to Wi-Fi.
+* Starts the camera web server.
+* Provides live streaming.
+* Displays the ESP32-CAM IP address.
+
+---
+
+## `blind_curve_recorder.py`
+
+Python/OpenCV recording application.
+
+Functions:
+
+* Connects to ESP32-CAM stream.
+* Reads camera frames.
+* Adds date/time.
+* Creates five-minute video files.
+* Stores recordings.
+* Displays live video.
+* Reconnects if stream is lost.
 
 ---
 
 # 💻 Software Requirements
 
-## Arduino IDE
+## Embedded Development
 
-The embedded firmware can be developed and uploaded using the Arduino IDE with ESP32 board support.
-
-Required support includes:
-
+* Arduino IDE
 * ESP32 board package
-* ESP32-CAM board configuration
-* Wi-Fi libraries
-* Camera libraries
-* Standard ESP32 libraries
+* ESP8266 board package
+* LoRa library
+* LiquidCrystal_I2C library
+* Wire/I²C library
+
+## Camera Recording
+
+Python 3.x with:
+
+```text
+OpenCV
+```
+
+Install OpenCV using:
+
+```bash
+pip install opencv-python
+```
 
 ---
 
-# ⚙️ ESP32-CAM Setup
+# 🚀 Installation
 
-## Step 1 — Install Arduino IDE
+## 1. Clone the Repository
 
-Install the Arduino IDE on the development computer.
+```bash
+git clone https://github.com/roopeshARR/Accident-Prevention-System-at-Blind-Curves.git
+```
 
-## Step 2 — Install ESP32 Board Support
+```bash
+cd Accident-Prevention-System-at-Blind-Curves
+```
 
-Add ESP32 board support through the Arduino IDE Boards Manager.
+---
 
-## Step 3 — Select the ESP32-CAM Board
+# 2. Upload Upper ESP32 Firmware
 
-Select the appropriate ESP32-CAM board configuration according to the hardware being used.
+Open:
 
-## Step 4 — Configure Wi-Fi
+```text
+Codes/sender_up/sender_up.ino
+```
 
-Enter the Wi-Fi network credentials in the ESP32-CAM firmware.
+Select the appropriate ESP32 board and upload it to the upper sensing node.
 
-Example:
+---
+
+# 3. Upload Lower ESP32 Firmware
+
+Open:
+
+```text
+Codes/sender_down/sender_down.ino
+```
+
+Upload it to the lower sensing node.
+
+---
+
+# 4. Upload ESP8266 Firmware
+
+Open:
+
+```text
+Codes/receiver8266/receiver8266.ino
+```
+
+Select the appropriate NodeMCU ESP8266 board and upload.
+
+---
+
+# 5. Upload Arduino Nano Firmware
+
+Open:
+
+```text
+Codes/ard_nan/ard_nan.ino
+```
+
+Select Arduino Nano / ATmega328P and upload.
+
+---
+
+# 6. Configure ESP32-CAM
+
+Open:
+
+```text
+Codes/CameraWebServer/CameraWebServer.ino
+```
+
+The current firmware is configured for:
+
+```text
+CAMERA_MODEL_AI_THINKER
+```
+
+Configure the Wi-Fi credentials before uploading.
+
+Use placeholders when publishing the repository:
 
 ```cpp
-const char* ssid = "YOUR_WIFI_NAME";
-const char* password = "YOUR_WIFI_PASSWORD";
+const char *ssid = "YOUR_WIFI_NAME";
+const char *password = "YOUR_WIFI_PASSWORD";
 ```
 
-**Do not upload real Wi-Fi credentials to a public GitHub repository.**
+Do **not** commit real Wi-Fi passwords to GitHub.
 
-Use placeholders in the source code before committing it publicly.
+---
 
-## Step 5 — Upload Firmware
+# 7. Run ESP32-CAM
 
-Connect the ESP32-CAM to the programming interface and upload the firmware.
+After uploading:
 
-## Step 6 — Open Serial Monitor
-
-Set the appropriate baud rate and observe the boot messages.
-
-The ESP32-CAM should report its network connection and IP address.
+1. Power the ESP32-CAM.
+2. Open Serial Monitor.
+3. Wait for Wi-Fi connection.
+4. Note the IP address.
+5. Open the IP address in a browser.
 
 Example:
 
 ```text
-WiFi connected
-Camera Ready!
-Use 'http://192.168.x.x' to connect
+http://192.168.1.101
 ```
 
-## Step 7 — Open the IP Address
-
-Open the displayed IP address in a browser connected to the same network.
+The actual address depends on the network.
 
 ---
 
-# 📡 Using a Mobile Hotspot
+# 8. Run the Recorder
 
-The ESP32-CAM can also be tested using a smartphone hotspot.
+Install OpenCV:
+
+```bash
+pip install opencv-python
+```
+
+Open:
 
 ```text
-             Smartphone
-             Hotspot
-                │
-                │ Wi-Fi
-                ▼
-             ESP32-CAM
-                │
-                ▼
-          Local IP Address
-                │
-                ▼
-         Laptop / Phone
-                │
-                ▼
-          Camera Stream
+Codes/blind_curve_recorder.py
 ```
 
-This is useful for field testing because a separate Wi-Fi router is not required.
+Update:
 
-However, the IP address can change whenever the ESP32-CAM reconnects to the hotspot.
+```python
+STREAM_URL = "http://<ESP32-CAM-IP>:81/stream"
+```
+
+Example:
+
+```python
+STREAM_URL = "http://192.168.1.101:81/stream"
+```
+
+Run:
+
+```bash
+python blind_curve_recorder.py
+```
+
+The recorder creates:
+
+```text
+BlindCurve_Recordings/
+```
+
+and begins recording.
+
+Press:
+
+```text
+Q
+```
+
+to stop recording.
 
 ---
 
-# 🧪 Testing Procedure
+# 📊 Testing
 
-## Test 1 — Camera Connectivity
+## Test 1 — System Startup
 
-1. Power the ESP32-CAM.
-2. Connect it to Wi-Fi.
-3. Check the IP address.
-4. Open the IP in a browser.
-5. Verify the camera interface.
+Expected:
 
-Expected result:
+```text
+ESP32 Upper → Ready
+ESP32 Lower → Ready
+ESP8266     → Receiver Ready
+Nano        → Controller Ready
+ESP32-CAM   → Camera Ready
+```
+
+---
+
+# Test 2 — No Vehicle
+
+Expected:
+
+```text
+UP:
+GREEN
+
+DOWN:
+GREEN
+
+LCD:
+No Vehicle
+SAFE TO GO
+
+Buzzer:
+OFF
+```
+
+---
+
+# Test 3 — Vehicle From Upper Side
+
+The upper ESP32 detects the vehicle.
+
+```text
+Vehicle
+   ↓
+Upper ESP32
+   ↓
+UP Packet
+   ↓
+LoRa
+   ↓
+ESP8266
+   ↓
+UP Queue
+```
+
+The lower side receives the warning.
+
+---
+
+# Test 4 — Vehicle From Lower Side
+
+The lower ESP32 generates:
+
+```text
+DOWN,TYPE,SPEED,DISTANCE
+```
+
+The ESP8266 adds the vehicle to the DOWN queue and warns the upper side.
+
+---
+
+# Test 5 — Heavy Vehicle
+
+The second ultrasonic sensor detects sufficient vehicle height.
+
+Expected:
+
+```text
+Vehicle Type:
+HEAVY
+```
+
+---
+
+# Test 6 — Light Vehicle
+
+If the vehicle does not satisfy the configured height condition:
+
+```text
+Vehicle Type:
+LIGHT
+```
+
+---
+
+# Test 7 — Speed Calculation
+
+The vehicle passes two sensing points.
+
+The system calculates:
+
+```text
+Speed = 0.20 / Time
+```
+
+and converts it into km/h.
+
+---
+
+# Test 8 — ETA
+
+The ESP8266 uses the measured speed and configured curve distance to calculate ETA.
+
+The LCD displays the resulting ETA.
+
+---
+
+# Test 9 — Both Directions
+
+Vehicles approach from both directions.
+
+Expected:
+
+```text
+UP Queue   > 0
+DOWN Queue > 0
+```
+
+The controller enters:
+
+```text
+STATE : BOTH SIDES
+```
+
+The buzzer begins intermittent operation.
+
+---
+
+# Test 10 — Vehicle Passes Curve
+
+The Nano detects that a vehicle has passed.
+
+```text
+Vehicle Passed
+      ↓
+Nano
+      ↓
+Pulse
+      ↓
+ESP8266
+      ↓
+Queue Decrement
+      ↓
+Priority Recalculation
+```
+
+---
+
+# Test 11 — ESP32-CAM Live Stream
+
+Expected:
 
 ```text
 ESP32-CAM
     ↓
-Wi-Fi Connected
+Wi-Fi
     ↓
 IP Address
     ↓
@@ -793,647 +1865,767 @@ Live Camera
 
 ---
 
-## Test 2 — Live Video
+# Test 12 — Camera Recording
 
-Verify that:
+Run:
 
-* Camera initializes correctly.
-* Live stream loads.
-* Video frames are received.
-* The connection remains stable.
-
----
-
-## Test 3 — Recording
-
-Verify that camera information can be recorded/stored according to the current implementation.
-
----
-
-## Test 4 — Timestamp
-
-Verify that recorded events/data contain the corresponding timestamp.
-
-Example:
-
-```text
-Event:
-Vehicle detected
-
-Timestamp:
-2026-09-12 12:30:15
+```bash
+python blind_curve_recorder.py
 ```
-
----
-
-## Test 5 — Vehicle Detection
-
-Simulate a vehicle entering the monitored area.
 
 Expected:
 
 ```text
-Vehicle
-   ↓
-Detection
-   ↓
-ESP32
-   ↓
-Warning
-   ↓
-Camera Monitoring
-   ↓
-Timestamped Event
+ESP32-CAM connected!
+Continuous recording started.
 ```
 
----
-
-## Test 6 — Opposite Direction
-
-Repeat the test from the opposite side.
-
-The corresponding warning should be activated for the other direction.
+A new file should be generated approximately every five minutes.
 
 ---
 
-# 📈 Current Development Status
+# Test 13 — Timestamp
 
-| Feature                          | Status                   |
-| -------------------------------- | ------------------------ |
-| ESP32 Controller                 | ✅ Implemented            |
-| Blind Curve Concept              | ✅ Implemented            |
-| Vehicle Detection Concept        | ✅ Implemented            |
-| Warning System                   | ✅ Prototype              |
-| ESP32-CAM                        | ✅ Added                  |
-| Wi-Fi Connectivity               | ✅ Working                |
-| Browser Camera Access            | ✅ Working                |
-| Live Camera Stream               | ✅ Working                |
-| Mobile Hotspot Testing           | ✅ Working                |
-| Recording                        | ✅ Current Development    |
-| Timestamped Recording/Data       | ✅ Current Implementation |
-| Automated Vehicle Classification | 🔄 Future                |
-| Speed Estimation                 | 🔄 Future                |
-| AI Vehicle Detection             | 🔄 Future                |
-| Collision Risk Prediction        | 🔄 Future                |
-| Cloud Monitoring                 | 🔄 Future                |
-
----
-
-# 🧠 Why Add a Camera?
-
-The original sensor-based approach can tell the system that something has been detected.
-
-A camera adds **visual context**.
-
-For example:
+The recorded frames should contain:
 
 ```text
-Sensor:
-"Something is present."
-
-Camera:
-"What is present?"
-"Where is it?"
-"What direction is it moving?"
-"How many vehicles are present?"
-"What is happening around the curve?"
+DD-MM-YYYY  HH:MM:SS
 ```
 
-This makes the camera an important step toward a more intelligent road-safety system.
-
----
-
-# 🤖 Future Computer Vision Integration
-
-The ESP32-CAM creates a foundation for future computer-vision functionality.
-
-A future version could analyze the camera feed to detect:
+Example:
 
 ```text
-                 Camera
-                    │
-                    ▼
-             Image Processing
-                    │
-                    ▼
-             Object Detection
-                    │
-          ┌─────────┼─────────┐
-          ▼         ▼         ▼
-        Car       Bike      Truck
-          │         │         │
-          └─────────┼─────────┘
-                    ▼
-             Traffic Analysis
-                    │
-                    ▼
-             Risk Estimation
-                    │
-                    ▼
-             Warning System
-```
-
-Possible future capabilities include:
-
-* Vehicle detection
-* Vehicle counting
-* Vehicle classification
-* Direction detection
-* Speed estimation
-* Traffic-density estimation
-* Lane/road occupancy detection
-* Collision-risk estimation
-
----
-
-# 🚗 Future Intelligent Blind-Curve System
-
-The long-term architecture can evolve into:
-
-```text
-                 ┌─────────────────┐
-                 │    ESP32-CAM    │
-                 │     Camera      │
-                 └────────┬────────┘
-                          │
-                          ▼
-                  Vehicle Detection
-                          │
-                          ▼
-                   Object Tracking
-                          │
-                          ▼
-                   Speed Estimation
-                          │
-                          ▼
-                 Direction Detection
-                          │
-                          ▼
-                 Collision Prediction
-                          │
-                          ▼
-                    Risk Level
-                          │
-            ┌─────────────┼─────────────┐
-            ▼             ▼             ▼
-           LOW          MEDIUM         HIGH
-            │             │             │
-          SAFE          ALERT       IMMEDIATE
-                                      WARNING
+12-09-2026  12:30:15
 ```
 
 ---
 
-# 🌐 IoT Expansion
-
-Because the system uses ESP32 and Wi-Fi, it can eventually become a connected road-safety system.
-
-Future architecture:
-
-```text
-                    BLIND CURVE
-                         │
-                         ▼
-                 ESP32 / ESP32-CAM
-                         │
-                         │ Wi-Fi
-                         ▼
-                    IoT Gateway
-                         │
-                         ▼
-                    Cloud Server
-                         │
-             ┌───────────┼───────────┐
-             ▼           ▼           ▼
-         Dashboard     Database    Analytics
-             │
-             ▼
-       Traffic Authority
-```
-
-Possible functionality:
-
-* Remote monitoring
-* Cloud recording
-* Traffic statistics
-* Event history
-* Remote system health monitoring
-* Multiple blind-curve monitoring
-* Centralized road-safety dashboard
-
----
-
-# ☀️ Future Solar-Powered Deployment
-
-For remote roads, the system can eventually operate using solar power.
-
-```text
-       Solar Panel
-            │
-            ▼
-     Charge Controller
-            │
-            ▼
-         Battery
-            │
-            ▼
-      ESP32 + Camera
-            │
-            ▼
-       Safety System
-```
-
-This would make the system more suitable for:
-
-* Mountain roads
-* Rural roads
-* Remote highways
-* Forest roads
-* Areas without reliable grid power
-
----
-
-# 🚨 Potential Warning System
-
-The warning mechanism can eventually be expanded beyond a simple indicator.
-
-### Current concept
-
-```text
-Vehicle detected
-       ↓
-Warning LED
-```
-
-### Future system
-
-```text
-Vehicle detected
-       │
-       ├──► LED Warning
-       │
-       ├──► Buzzer
-       │
-       ├──► Display
-       │
-       ├──► Wireless Alert
-       │
-       └──► Traffic Dashboard
-```
-
----
-
-# 🌍 Potential Applications
-
-The system can be adapted for:
-
-* 🏔️ Mountain roads
-* 🛣️ Blind curves
-* 🚧 Sharp turns
-* 🚗 Narrow roads
-* 🌄 Hairpin bends
-* 🏘️ Residential roads with poor visibility
-* 🏫 Campus roads
-* 🏭 Industrial roads
-* 🌲 Forest roads
-* 🚦 Low-visibility intersections
-
----
-
-# ⭐ Advantages
-
-## 1. Early Warning
-
-Drivers can be warned before entering the blind section.
-
-## 2. Real-Time Monitoring
-
-The ESP32-CAM allows the monitored area to be viewed remotely over a local network.
-
-## 3. Recorded Evidence
-
-Camera data can be recorded for later analysis.
-
-## 4. Timestamped Information
-
-Recorded events can be associated with their occurrence time.
-
-## 5. Low-Cost Hardware
-
-The system uses accessible embedded hardware.
-
-## 6. Wireless Connectivity
-
-The ESP32 platform provides built-in wireless connectivity.
-
-## 7. Expandable Architecture
-
-The system can evolve from a simple warning system into an intelligent traffic-monitoring platform.
-
-## 8. Suitable for Research
-
-The platform provides opportunities for further work in:
-
-* Embedded systems
-* IoT
-* Computer vision
-* Intelligent transportation
-* Edge computing
-* Traffic monitoring
-* Road safety
-
----
-
-# ⚠️ Limitations
-
-The current implementation is a **prototype and development platform**.
-
-It should not be considered a certified road-safety system for real-world deployment without extensive validation.
-
-Important engineering challenges include:
-
-* Camera performance in low light
-* Rain and weather conditions
-* Dust and dirt on the camera lens
-* Wi-Fi range
-* Network interruptions
-* Sensor false detections
-* Sensor blind spots
-* Power availability
-* Outdoor enclosure requirements
-* Accurate timestamp synchronization
-* Vehicle speed estimation
-* Reliable vehicle classification
-* Real-world traffic validation
-
----
-
-# 🔬 Research & Development Direction
-
-The project is intended to progress from a basic embedded prototype toward an intelligent road-safety system.
-
-### Phase 1 — Basic Detection
-
-```text
-Sensor → ESP32 → Warning
-```
-
-### Phase 2 — Visual Monitoring
-
-```text
-Sensor → ESP32
-            │
-            └── ESP32-CAM → Live Monitoring
-```
-
-### Phase 3 — Recording
-
-```text
-Camera → Recording → Timestamped Storage
-```
-
-### Phase 4 — Computer Vision
-
-```text
-Camera → Object Detection → Vehicle Information
-```
-
-### Phase 5 — Intelligent Risk Assessment
-
-```text
-Vehicle
-   +
-Speed
-   +
-Direction
-   +
-Distance
-   +
-Curve Geometry
-        │
-        ▼
-Collision Risk
-        │
-        ▼
-Intelligent Warning
-```
-
-### Phase 6 — Connected Smart Road
-
-```text
-Multiple Blind Curves
-          │
-          ▼
-     IoT Network
-          │
-          ▼
-   Central Dashboard
-          │
-          ▼
- Traffic Management
-```
-
----
-
-# 📚 Project Documentation
-
-Detailed project documentation is available in:
-
-📄 **[Doc.pdf](./Doc.pdf)**
-
-The documentation contains additional information about the project design, implementation, and development.
-
----
-
-# 🎞️ Project Presentation
-
-The project presentation is available in:
-
-📊 **[Presentation.pptx](./Presentation.pptx)**
+# 📈 Current System Status
+
+| Feature                        | Status        |
+| ------------------------------ | ------------- |
+| Upper ESP32 sensing node       | ✅ Implemented |
+| Lower ESP32 sensing node       | ✅ Implemented |
+| ESP8266 central controller     | ✅ Implemented |
+| Arduino Nano output controller | ✅ Implemented |
+| HC-SR04 vehicle detection      | ✅ Implemented |
+| Vehicle type detection         | ✅ Implemented |
+| LIGHT/HEAVY classification     | ✅ Implemented |
+| Speed estimation               | ✅ Implemented |
+| ETA calculation                | ✅ Implemented |
+| LoRa communication             | ✅ Implemented |
+| UP/DOWN queues                 | ✅ Implemented |
+| Priority logic                 | ✅ Implemented |
+| Dual LCD display               | ✅ Implemented |
+| Red/Green warning LEDs         | ✅ Implemented |
+| Buzzer warning                 | ✅ Implemented |
+| Vehicle-passed detection       | ✅ Implemented |
+| ESP32-CAM                      | ✅ Added       |
+| Wi-Fi camera connection        | ✅ Working     |
+| Live camera streaming          | ✅ Working     |
+| Mobile hotspot testing         | ✅ Working     |
+| OpenCV recording               | ✅ Implemented |
+| 5-minute video segmentation    | ✅ Implemented |
+| Timestamp overlay              | ✅ Implemented |
+| Automatic stream reconnection  | ✅ Implemented |
+| AI vehicle detection           | 🔄 Future     |
+| Computer vision classification | 🔄 Future     |
+| Cloud monitoring               | 🔄 Future     |
+| GPS integration                | 🔄 Future     |
+| Solar-powered deployment       | 🔄 Future     |
 
 ---
 
 # 📸 Project Images
 
-Hardware and prototype photographs are available in:
-
-📁 **[Images](./Images)**
-
----
-
-# 📂 Source Code
-
-The embedded source code is available in:
-
-📁 **[Codes](./Codes)**
-
-The code includes the implementation for the embedded components used in the project.
-
----
-
-# 📐 Design Files
-
-### System Block Diagram
-
-[BlockDiagram.png](./BlockDiagram.png)
-
-### Blind Curve Flowchart
-
-[Flow_Chart_Curve.png](./Flow_Chart_Curve.png)
-
-### ESP32 Flowchart
-
-[Flow_Chart_esp32.png](./Flow_Chart_esp32.png)
-
----
-
-# 🔐 Security & Credentials
-
-**Never commit real Wi-Fi passwords, API keys, tokens, or other credentials to this public repository.**
-
-Before pushing code to GitHub, replace credentials with placeholders:
-
-```cpp
-const char* ssid = "YOUR_WIFI_NAME";
-const char* password = "YOUR_WIFI_PASSWORD";
-```
-
-For local testing, the actual credentials can be configured directly in the local copy of the firmware.
-
----
-
-# 🧪 Example Development Workflow
+The repository contains project photographs in:
 
 ```text
-                 Hardware Setup
-                       │
-                       ▼
-                  ESP32 Setup
-                       │
-                       ▼
-                ESP32-CAM Setup
-                       │
-                       ▼
-                  Wi-Fi Setup
-                       │
-                       ▼
-                Camera Testing
-                       │
-                       ▼
-               Live Stream Test
-                       │
-                       ▼
-                Recording Test
-                       │
-                       ▼
-              Timestamping Test
-                       │
-                       ▼
-              Vehicle Detection
-                       │
-                       ▼
-                Warning System
-                       │
-                       ▼
-               System Integration
-                       │
-                       ▼
-                Field Testing
+Images/
+```
+
+Current images include:
+
+```text
+a1.jpeg
+a2.jpeg
+a3.jpeg
+a4.jpeg
+
+c1.jpeg
+c2.jpeg
+
+u1.jpeg
+u2.jpeg
+```
+
+These document the project prototype and hardware implementation.
+
+---
+
+# 📐 Block Diagram
+
+The overall system block diagram is available at:
+
+```text
+BlockDiagram.png
+```
+
+![Block Diagram](./BlockDiagram.png)
+
+---
+
+# 🔄 System Flowchart
+
+The blind-curve system flowchart is available at:
+
+```text
+Flow_Chart_Curve.png
+```
+
+![Curve Flowchart](./Flow_Chart_Curve.png)
+
+---
+
+# ⚙️ ESP32 Flowchart
+
+The ESP32 sensing-node flowchart is available at:
+
+```text
+Flow_Chart_esp32.png
+```
+
+![ESP32 Flowchart](./Flow_Chart_esp32.png)
+
+---
+
+# 📚 Documentation
+
+The complete academic project report is available at:
+
+```text
+Doc.pdf
+```
+
+The report covers:
+
+* Introduction
+* Problem statement
+* Objectives
+* Literature survey
+* Methodology
+* System architecture
+* Hardware requirements
+* Software requirements
+* Results
+* Discussion
+* Conclusion
+* Future scope
+* References
+* Source-code appendix
+
+---
+
+# 🎞️ Presentation
+
+The project presentation is available at:
+
+```text
+Presentation.pptx
 ```
 
 ---
 
-# 🎓 Educational Value
+# 💰 Approximate Prototype Cost
 
-This project demonstrates the integration of multiple engineering concepts:
+The original project documentation estimates the prototype cost at approximately:
 
-### Embedded Systems
+```text
+₹3500
+```
 
-* ESP32 programming
-* GPIO interfacing
-* Real-time control
-* Sensor integration
+for the original blind-curve warning system hardware.
 
-### IoT
+This cost does not necessarily represent the complete cost of the later ESP32-CAM and computer-based recording subsystem.
 
-* Wi-Fi communication
-* Local web server
-* Network-connected embedded devices
+---
 
-### Computer Vision
+# 🌟 Advantages
 
-The ESP32-CAM provides a platform for future image-processing and object-detection applications.
+## Real-Time Vehicle Detection
 
-### Road Safety
+Vehicles are detected before they reach the blind curve.
 
-The project addresses a real-world transportation problem involving blind curves and restricted visibility.
+## Two-Way Monitoring
 
-### Data Logging
+Both directions are monitored independently.
 
-Timestamped camera information provides a basis for event analysis and historical records.
+## Speed Awareness
+
+The system estimates the speed of approaching vehicles.
+
+## ETA Awareness
+
+Drivers can be informed about how soon a vehicle may reach the curve.
+
+## Vehicle Classification
+
+The prototype differentiates between LIGHT and HEAVY vehicles.
+
+## Long-Range Wireless Communication
+
+LoRa allows the sensing nodes to communicate with the central controller wirelessly.
+
+## Multiple-Vehicle Handling
+
+The ESP8266 uses separate queues and can maintain multiple approaching vehicles.
+
+## Driver-Friendly Warning
+
+Information is provided using:
+
+* LCD
+* LEDs
+* Buzzer
+
+## Visual Monitoring
+
+The ESP32-CAM provides an additional visual view of the monitored region.
+
+## Video Evidence
+
+The OpenCV recorder can continuously save timestamped footage.
+
+## Modular Architecture
+
+Different controllers handle sensing, communication, decision-making, output control, and camera monitoring.
+
+---
+
+# ⚠️ Limitations
+
+This is a **prototype system** and should not be treated as a certified road-safety system without extensive real-world testing and validation.
+
+Current limitations include:
+
+### Ultrasonic Detection
+
+HC-SR04 performance can be affected by:
+
+* Sensor alignment
+* Surface shape
+* Environmental conditions
+* Sensor range
+* Multiple reflections
+
+### Vehicle Classification
+
+The current LIGHT/HEAVY classification is based on sensor geometry and should be improved for reliable real-world vehicle classification.
+
+### Speed Measurement
+
+The current speed measurement uses a short sensing distance of:
+
+```text
+20 cm
+```
+
+This is suitable for the prototype but would require a more appropriate measurement distance and calibration for real roads.
+
+### ETA
+
+The current ETA calculation assumes a simplified relationship between measured speed and curve distance.
+
+Real traffic requires consideration of:
+
+* Acceleration
+* Braking
+* Road gradient
+* Traffic congestion
+* Driver behaviour
+* Curve geometry
+
+### Wi-Fi Camera
+
+The ESP32-CAM depends on Wi-Fi connectivity for live streaming.
+
+The local IP address may change after reconnection.
+
+### Camera Recording
+
+The current recording application runs on an external computer using Python/OpenCV.
+
+---
+
+# 🚀 Future Scope
+
+The project can be expanded significantly.
+
+## 1. AI-Based Vehicle Detection
+
+The ESP32-CAM feed can eventually be processed using computer vision to detect vehicles automatically.
+
+```text
+Camera
+   ↓
+Object Detection
+   ↓
+Vehicle Detection
+   ↓
+Vehicle Tracking
+```
+
+---
+
+# 2. Vehicle Classification Using AI
+
+Instead of the current ultrasonic height-based classification:
+
+```text
+Camera
+   ↓
+AI Model
+   ↓
+Car / Bike / Bus / Truck
+```
+
+This would provide much more useful classification.
+
+---
+
+# 3. Improved Speed Estimation
+
+Camera-based tracking could be combined with sensor data.
+
+```text
+Ultrasonic Speed
+       +
+Camera Tracking
+       ↓
+Improved Speed Estimate
+```
+
+---
+
+# 4. Collision-Risk Estimation
+
+A future version can combine:
+
+```text
+Vehicle Direction
++
+Vehicle Speed
++
+Vehicle Type
++
+Distance
++
+ETA
++
+Traffic Density
++
+Curve Geometry
+```
+
+to determine:
+
+```text
+LOW RISK
+MEDIUM RISK
+HIGH RISK
+```
+
+---
+
+# 5. Intelligent Warning Levels
+
+Instead of simple safe/warning states:
+
+```text
+GREEN
+   ↓
+Road Clear
+
+YELLOW
+   ↓
+Vehicle Approaching
+
+RED
+   ↓
+High Collision Risk
+```
+
+---
+
+# 6. GPS Integration
+
+GPS can be added to identify the exact location of deployed systems.
+
+This would allow multiple blind curves to be monitored.
+
+---
+
+# 7. Cloud Monitoring
+
+Future systems could transmit:
+
+* Vehicle counts
+* Speeds
+* Events
+* Camera information
+* System health
+* Traffic conditions
+
+to a cloud server.
+
+```text
+Blind Curve
+     │
+     ▼
+ESP32 / ESP32-CAM
+     │
+     ▼
+Internet
+     │
+     ▼
+Cloud
+     │
+     ▼
+Dashboard
+```
+
+---
+
+# 8. Solar-Powered Deployment
+
+Remote blind curves could use:
+
+```text
+Solar Panel
+     ↓
+Charge Controller
+     ↓
+Battery
+     ↓
+ESP32 + Sensors + Camera
+```
+
+This would reduce dependence on grid electricity.
+
+---
+
+# 9. Multiple Blind-Curve Network
+
+The system can eventually be expanded to multiple road locations.
+
+```text
+Curve 1 ──┐
+Curve 2 ──┤
+Curve 3 ──┼──► Central Monitoring System
+Curve 4 ──┤
+Curve 5 ──┘
+```
+
+---
+
+# 10. Central Traffic Dashboard
+
+A future dashboard could show:
+
+```text
+╔══════════════════════════════════╗
+║      BLIND CURVE MONITOR         ║
+╠══════════════════════════════════╣
+║ Upper Vehicles       : 2         ║
+║ Lower Vehicles       : 1         ║
+║ Current Risk         : HIGH      ║
+║ Upper ETA            : 03 sec    ║
+║ Lower ETA            : 05 sec    ║
+║ Camera               : ONLINE    ║
+║ Recording            : ACTIVE    ║
+╚══════════════════════════════════╝
+```
+
+---
+
+# 🔐 Security
+
+The ESP32-CAM source code currently contains Wi-Fi credentials for development.
+
+Before pushing the repository publicly:
+
+**Never expose real credentials.**
+
+Use:
+
+```cpp
+const char *ssid = "YOUR_WIFI_NAME";
+const char *password = "YOUR_WIFI_PASSWORD";
+```
+
+and configure the actual credentials locally.
+
+Similarly, avoid committing:
+
+* API keys
+* Passwords
+* Tokens
+* Private IP information where unnecessary
+* Other secrets
+
+---
+
+# 🧪 Recommended Prototype Testing Setup
+
+For safe testing, use a scaled model or controlled environment.
+
+```text
+             UPPER SIDE
+                 │
+            ESP32 NODE
+                 │
+                 │
+                 ▼
+           ╭──────────╮
+          ╱            ╲
+         ╱  BLIND CURVE ╲
+        ╱                ╲
+       ╱                  ╲
+      │                    │
+      │     ESP32-CAM      │
+      │         📷         │
+      │                    │
+       ╲                  ╱
+        ╲                ╱
+         ╲              ╱
+          ╰────────────╯
+                 │
+            ESP32 NODE
+                 │
+            LOWER SIDE
+```
+
+Testing should verify each subsystem individually before complete integration.
+
+---
+
+# 🔬 Development Philosophy
+
+The system is intentionally modular.
+
+Each controller has a dedicated role:
+
+```text
+┌──────────────────────────────────────────┐
+│                SYSTEM                    │
+├──────────────────────────────────────────┤
+│ ESP32 #1     → Upper Vehicle Sensing     │
+│ ESP32 #2     → Lower Vehicle Sensing     │
+│ ESP8266      → Central Processing        │
+│ Arduino Nano → Warning + Curve Output    │
+│ LoRa         → Long-Range Communication  │
+│ ESP32-CAM    → Visual Monitoring         │
+│ Python       → Recording + Timestamping  │
+└──────────────────────────────────────────┘
+```
+
+This separation makes the system easier to test, modify, and expand.
+
+---
+
+# 📖 Project Learning Outcomes
+
+This project demonstrates practical implementation of:
+
+* Embedded systems
+* Microcontroller programming
+* ESP32
+* ESP8266
+* Arduino Nano
+* Ultrasonic sensing
+* Sensor interfacing
+* LoRa communication
+* SPI
+* I²C
+* GPIO
+* LCD interfacing
+* LED control
+* Buzzer control
+* Queue data structures
+* Real-time decision logic
+* Speed calculation
+* ETA calculation
+* Wireless communication
+* Wi-Fi networking
+* ESP32-CAM
+* HTTP video streaming
+* Python
+* OpenCV
+* Video recording
+* Timestamp processing
+* Multi-controller system design
+
+---
+
+# 🏆 Project Significance
+
+The project combines several embedded and communication technologies to address a practical road-safety problem.
+
+Rather than relying only on a passive warning sign, the system attempts to create an active information layer around a blind curve.
+
+The architecture combines:
+
+```text
+SENSING
+   +
+WIRELESS COMMUNICATION
+   +
+PROCESSING
+   +
+DECISION MAKING
+   +
+DRIVER WARNING
+   +
+VISUAL MONITORING
+   +
+DATA RECORDING
+```
+
+This provides a foundation for developing a more advanced **Intelligent Transportation System (ITS)** for dangerous road sections.
 
 ---
 
 # 👨‍💻 Author
 
-## Roopesh A Reddy
+## Avuthu Roopesh Reddy
 
-**Accident Prevention System at Blind Curves**
+**B.Tech — Electronics and Communication Engineering**
+
+**Project:** Accident Prevention System at Blind Curves
 
 GitHub:
 
-**[roopeshARR](https://github.com/roopeshARR)**
+**roopeshARR**
+
+---
+
+# 🎓 Academic Project
+
+This project was developed as a mini project in the:
+
+**Department of Electronics and Communication Engineering**
+
+**Anurag University School of Engineering**
+
+Academic Year:
+
+```text
+2026–2027
+```
+
+Under the guidance of:
+
+**Dr. Rajesh Thumma**
+
+Associate Professor
+Department of ECE
+
+---
+
+# 📄 Project Files
+
+| File                            | Description                |
+| ------------------------------- | -------------------------- |
+| `Doc.pdf`                       | Complete project report    |
+| `Presentation.pptx`             | Project presentation       |
+| `BlockDiagram.png`              | System block diagram       |
+| `Flow_Chart_Curve.png`          | Blind curve flowchart      |
+| `Flow_Chart_esp32.png`          | ESP32 flowchart            |
+| `Codes/sender_up/`              | Upper ESP32 node           |
+| `Codes/sender_down/`            | Lower ESP32 node           |
+| `Codes/receiver8266/`           | ESP8266 central controller |
+| `Codes/ard_nan/`                | Arduino Nano controller    |
+| `Codes/CameraWebServer/`        | ESP32-CAM firmware         |
+| `Codes/blind_curve_recorder.py` | Python/OpenCV recorder     |
+| `Images/`                       | Project photographs        |
 
 ---
 
 # 📜 License
 
-This project is developed primarily for **educational, academic, research, and prototype development purposes**.
+This project is primarily intended for:
 
-Real-world deployment on public roads requires appropriate safety testing, engineering validation, environmental testing, regulatory compliance, and approval from the relevant authorities.
+* Educational use
+* Academic projects
+* Research
+* Embedded-system experimentation
+* Prototype development
+
+Deployment on public roads would require appropriate engineering validation, environmental testing, safety certification, regulatory approval, and extensive field testing.
 
 ---
 
-# 🚀 Project Vision
+# ⭐ Future Vision
 
-The ultimate goal of this project is not simply to place a sensor at a blind curve.
+The current project is a working prototype that combines **vehicle sensing, wireless communication, traffic-state processing, warning systems, and camera monitoring**.
 
-The vision is to build an **intelligent road-safety infrastructure system** that can understand what is happening around dangerous sections of roads and warn road users before a dangerous situation develops.
+The future goal is to evolve it into a complete intelligent blind-curve safety system:
 
 ```text
-                       TODAY
-                         │
-                         ▼
-                Vehicle Detection
-                         │
-                         ▼
-                     Warning
-                         │
-                         ▼
-                   ESP32-CAM
-                         │
-                         ▼
-                Live Monitoring
-                         │
-                         ▼
+                    CURRENT
+                       │
+                       ▼
+               Ultrasonic Sensors
+                       │
+                       ▼
+                  ESP32 Nodes
+                       │
+                       ▼
+                      LoRa
+                       │
+                       ▼
+                    ESP8266
+                       │
+                       ▼
+                  Arduino Nano
+                       │
+                       ▼
+               LED + LCD + Buzzer
+                       │
+                       ▼
+                 Driver Warning
+
+
+                    CAMERA
+                       │
+                       ▼
+                  ESP32-CAM
+                       │
+                       ▼
+                  Live Stream
+                       │
+                       ▼
              Timestamped Recording
-                         │
-                         ▼
-               Computer Vision
-                         │
-                         ▼
-              Vehicle Classification
-                         │
-                         ▼
-                Speed Estimation
-                         │
-                         ▼
+                       │
+                       ▼
+                 Future AI/CV
+                       │
+                       ▼
+              Vehicle Detection
+                       │
+                       ▼
+             Vehicle Classification
+                       │
+                       ▼
+               Speed Estimation
+                       │
+                       ▼
               Collision Prediction
-                         │
-                         ▼
-             Intelligent Warning
-                         │
-                         ▼
+                       │
+                       ▼
+              Intelligent Warning
+                       │
+                       ▼
                 Smart Road Network
 ```
 
@@ -1441,12 +2633,12 @@ The vision is to build an **intelligent road-safety infrastructure system** that
 
 <p align="center">
 
-# 🚗 Detect Early • Monitor Continuously • Warn Early • Prevent Accidents 🚧
+# 🚗 DETECT EARLY • CALCULATE RISK • WARN EARLY • MONITOR CONTINUOUSLY 🚧
 
 </p>
 
 <p align="center">
 
-**Built with ESP32 • ESP32-CAM • Embedded Systems • IoT • Road Safety**
+**ESP32 • ESP8266 • Arduino Nano • ESP32-CAM • LoRa • HC-SR04 • OpenCV**
 
 </p>
