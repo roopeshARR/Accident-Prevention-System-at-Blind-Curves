@@ -10,8 +10,8 @@
 // ===========================
 // Enter your WiFi credentials
 // ===========================
-const char *ssid = "ARR";
-const char *password = "Roopesh18";
+const char *ssid = "WIFI_ID";
+const char *password = "WIFI_PASSWORD";
 
 void startCameraServer();
 void setupLedFlash();
