@@ -1922,7 +1922,7 @@ Images/
 ```
 
 Current images include:
-
+![Project](./Images/a1.jpeg)
 ```text
 a1.jpeg
 a2.jpeg
